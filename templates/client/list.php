@@ -23,7 +23,7 @@
 </div>
 <div id="client-dialog" title="Criar novo cliente">
 	    <form>
-	        <!--<input type="hidden" name="id">-->
+	        <input type="hidden" name="id">
 	        <div class="form-group">
 	            <label for="name">Nome</label>
 	            <input type="text" class="form-control" id="name" name="name" placeholder="Nome" required>
@@ -66,7 +66,9 @@
         tbody.html(loading);
         $.get('/api/clients', function( data){
             data.length ? tbody.empty():tbody.html(empty);
+
             var btnEdit = $('<button/>').attr('type', 'button').html('Editar');
+
             for( let key in data){
                 let tr = $('<tr/>'),
                     row = data[key],
@@ -106,11 +108,30 @@
     }
 
     function loadEditForm(id){
-        console.log(id);
+        $.get('/api/clients?id='+id, function( data){
+            var client = data[0];
+            $('input[name=id]').val(client.id);
+            $('input[name=name]').val(client.name);
+            $('input[name=email]').val(client.email);
+            $('input[name=cpf]').val(client.cpf);
+            $('input[name=phone]').val(client.phone);
+            $('input[name=birthday]').val(client.birthday);
+            $('input[name=birthday]').val(client.birthday);
+            $('select[name=marital_status]').val(client.marital_status);
+            dialogSave.dialog('open');
+        });
     }
-    function addClient(){
-        let data  = $('#client-dialog>form').serialize();
-        $.post('/api/clients/store',data)
+    function saveClient(){
+        let data  = $('#client-dialog>form').serializeObject();
+        let id = $('input[name=id]').val();
+        let url;
+            if( id == ""){
+                url = '/api/clients/store';
+                delete data.id;
+            }else{
+                url = '/api/clients/update';
+            }
+        $.post(url,data)
             .done( function(){
                 dialogSave.dialog('close');
                 listClients();
@@ -126,7 +147,7 @@
                                     width : 400,
                                     modal: true,
                                     buttons:{
-                                        "Criar Cliente": addClient,
+                                        "Criar Cliente": saveClient,
                                         "Cancelar": function(){
                                                 //$(this).dialog('close');
                                                 dialogSave.dialog('close');
@@ -134,6 +155,7 @@
                                     },
                                     close: function(){
                                            $('#client-dialog>form')[0].reset();  
+                                           $('#client-dialog>form').find('input[type=hidden]').val("");
                                     }
                                 });
         $('#client-dialog>form').on('submit', function(event){
