@@ -2,6 +2,7 @@
 
 <div id="content" style="display:none;">
     <h1>Meus Clientes</h1>
+    <button type="button">Novo</button>
     <table id="table" class="table">
         <thead>
             <tr>
@@ -20,6 +21,41 @@
     
     </table>
 </div>
+<div id="client-dialog" title="Criar novo cliente">
+	    <form>
+	        <!--<input type="hidden" name="id">-->
+	        <div class="form-group">
+	            <label for="name">Nome</label>
+	            <input type="text" class="form-control" id="name" name="name" placeholder="Nome" required>
+	        </div>
+	        <div class="form-group">
+	            <label for="name">CPF</label>
+	            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="CPF" required>
+	        </div>
+	        <div class="form-group">
+	            <label for="email">E-mail</label>
+	            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+	        </div>
+	        <div class="form-group">
+	            <label for="phone">Telefone</label>
+	            <input type="text" class="form-control" id="phone" name="phone" required>
+	        </div>
+	        <div class="form-group">
+	            <label for="birthday">Aniversário</label>
+	            <input type="text" class="form-control" id="birthday" name="birthday" required>
+	        </div>
+	        <div class="form-group">
+	            <label for="marital_status">Estado Civil</label>
+	            <select class="form-control" id="marital_status" name="marital_status" required>
+	                <option value="1">Solteiro</option>
+	                <option value="2">Casado</option>
+	                <option value="3">Divorciado</option>
+	            </select>
+	        </div>
+	
+	        <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+	    </form>
+	</div>
 
 <?php include __DIR__ . '/../layouts/footer.php' ?>
 <script>
@@ -30,32 +66,91 @@
         tbody.html(loading);
         $.get('/api/clients', function( data){
             data.length ? tbody.empty():tbody.html(empty);
+            var btnEdit = $('<button/>').attr('type', 'button').html('Editar');
             for( let key in data){
                 let tr = $('<tr/>'),
                     row = data[key],
                     nome = $('<td/>').html(row.name),
-                    cpf = $('<td/>').html(row.cpf), 
+                    cpf = $('<td/>').html($.formatCpf(row.cpf)), 
                     email = $('<td/>').html(row.email), 
-                    tel = $('<td/>').html(row.phone), 
-                    niver = $('<td/>').html(row.birthday),
-                    ecivil = $('<td/>').html(row.marital_status)
+                    tel = $('<td/>').html($.formatPhone(row.phone)), 
+                    niver = $('<td/>').html($.formatDate(row.birthday)),
+                    ecivil = $('<td/>').html($.formatMaritalStatus(row.marital_status))
+
+                    let actions = $('<td/>');
+                    actions.append(btnEdit.clone());
+
+                    tr.data('client-id',row.id);
+                    
+
                     tr.append(nome)
                        .append(cpf)
                        .append(email)
                        .append(tel)
                        .append(niver)
-                       .append(ecivil);
+                       .append(ecivil)
+                       .append(actions);
+
                     tbody.append(tr);
             }
-
+                tbody.find('button:contains(Editar)').button({
+                    icon:'ui.icon-pencil'
+                })
+                     .click(function (){
+                         var button = $(this),
+                             tr = button.closest('tr'),
+                             id = tr.data('client-id');
+                             loadEditForm(id);
+                     })
         })
     }
+
+    function loadEditForm(id){
+        console.log(id);
+    }
+    function addClient(){
+        let data  = $('#client-dialog>form').serialize();
+        $.post('/api/clients/store',data)
+            .done( function(){
+                dialogSave.dialog('close');
+                listClients();
+            });
+
+    }
+    let dialogSave;
     function init(){
+        dialogSave = $('#client-dialog')
+                                .dialog({
+                                    autoOpen: false,
+                                    height: 400,
+                                    width : 400,
+                                    modal: true,
+                                    buttons:{
+                                        "Criar Cliente": addClient,
+                                        "Cancelar": function(){
+                                                //$(this).dialog('close');
+                                                dialogSave.dialog('close');
+                                        }
+                                    },
+                                    close: function(){
+                                           $('#client-dialog>form')[0].reset();  
+                                    }
+                                });
+        $('#client-dialog>form').on('submit', function(event){
+            event.preventDefault();
+            addClient();
+        })
+        $('#content>button').button({
+            icon: 'ui-icon-plus'
+        }).click(function (){
+            dialogSave.dialog('open');
+        });
         $('#content').show('slide');
+        listClients();
     }
     $(document).ready( function (){
         init();
-        listClients();
+        
     })
     
 </script>
