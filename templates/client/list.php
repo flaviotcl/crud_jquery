@@ -125,6 +125,16 @@
         let data  = $('#client-dialog>form').serializeObject();
         let id = $('input[name=id]').val();
         let url;
+
+
+        data.cpf = data.cpf.replace(/[^0-9]/g,'');
+        data.phone = data.phone.replace(/[^0-9]/g,'');
+        //07/07/2017 -> 2017-07-07
+        console.log( data.birthday);
+        data.birthday = data.birthday.split('/').reverse().join('-');
+        console.log( data.birthday);
+
+
             if( id == ""){
                 url = '/api/clients/store';
                 delete data.id;
@@ -167,6 +177,20 @@
         }).click(function (){
             dialogSave.dialog('open');
         });
+        $('input[name=cpf]').mask('000.000.000-00');
+
+        var SPMaskBehavior = function (val) {
+                return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+            },
+            spOptions = {
+                onKeyPress: function (val, e, field, options) {
+                    field.mask(SPMaskBehavior.apply({}, arguments), options);
+                }
+            };
+
+        $('input[name=phone]').mask(SPMaskBehavior, spOptions);
+        $('input[name=birthday]').datepicker();
+
         $('#content').show('slide');
         listClients();
     }
