@@ -57,6 +57,10 @@
 	    </form>
 	</div>
 
+    <div id="delete-dialog" title="Exclusão de cliente">
+        <p><span class="ui-icon ui-icon-alert"></span>Deseja excluir este cliente</p>
+    </div>
+
 <?php include __DIR__ . '/../layouts/footer.php' ?>
 <script>
     function listClients(){
@@ -68,6 +72,8 @@
             data.length ? tbody.empty():tbody.html(empty);
 
             var btnEdit = $('<button/>').attr('type', 'button').html('Editar');
+            var btnDelete = $('<button/>').attr('type', 'button').html('Excluir');
+
 
             for( let key in data){
                 let tr = $('<tr/>'),
@@ -79,8 +85,10 @@
                     niver = $('<td/>').html($.formatDate(row.birthday)),
                     ecivil = $('<td/>').html($.formatMaritalStatus(row.marital_status))
 
-                    let actions = $('<td/>');
-                    actions.append(btnEdit.clone());
+                    let actions = $('<td/>');                    
+                    actions.append(btnEdit.clone())
+                            .append(btnDelete.clone());
+
 
                     tr.data('client-id',row.id);
                     
@@ -104,7 +112,22 @@
                              id = tr.data('client-id');
                              loadEditForm(id);
                      })
-        })
+                     tbody.find('button:contains(Excluir)').button({
+                        icon: 'ui-icon-trash'
+                })
+                    .click(function () {
+                        var button = $(this),
+                            tr = button.closest('tr'),
+                            index = tr.index(),
+                            id = tr.data('client-id');
+                        $('#delete-dialog').data('delete_id', id);
+                        $('#delete-dialog').data('delete_index', index);
+
+                        dialogDelete.dialog('open');
+                     })
+       
+        });
+               
     }
 
     function loadEditForm(id){
@@ -148,7 +171,17 @@
             });
 
     }
-    let dialogSave;
+    function deleteClient() {
+        var id = $('#delete-dialog').data('delete_id'),
+            index = $('#delete-dialog').data('delete_index');
+        $.post('/api/clients/delete', {id: id})
+            .done(function () {
+                $('#table>tbody tr').eq(index).remove();
+                dialogDelete.dialog('close');
+            });
+            
+    }
+    let dialogSave, dialogDelete;
     function init(){
         dialogSave = $('#client-dialog')
                                 .dialog({
@@ -167,7 +200,22 @@
                                            $('#client-dialog>form')[0].reset();  
                                            $('#client-dialog>form').find('input[type=hidden]').val("");
                                     }
+        });
+
+        dialogDelete = $('#delete-dialog')
+                                .dialog({
+                                    autoOpen: false,
+                                    resizable: false,
+                                    height: "auto",
+                                    modal: true,
+                                    buttons: {
+                                        "OK": deleteClient,
+                                        "Cancelar": function () {
+                                            $(this).dialog('close');
+                                        }
+                                    }
                                 });
+
         $('#client-dialog>form').on('submit', function(event){
             event.preventDefault();
             addClient();
