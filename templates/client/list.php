@@ -72,6 +72,23 @@
             type: 'error'
         });
     }
+
+
+    function showLoading(text){
+        new PNotify({
+            text: text,
+            styling: 'brighttheme',
+            type: 'info',
+            hide: false,
+            addclass: 'stack-modal',
+            stack: {
+                dir1: 'down',
+                dir2: 'right',
+                modal: false,
+                overlay_close: true
+            }
+        });
+    }
     function listClients(){
         let loading ='<tr><td colspan="6">Carregando ... </td></tr>';
         let empty ='<tr><td colspan="6">Nenhum registro encontrado ... </td></tr>';
@@ -142,7 +159,9 @@
     }
 
     function loadEditForm(id){
-        $.get('/api/clients?id='+id, function( data){
+        showLoading('Carregando cliente ...');
+        $.get('/api/clients?id='+id, function(data){
+            PNotify.removeAll()
             var client = data[0];
             $('input[name=id]').val(client.id);
             $('input[name=name]').val(client.name);
@@ -154,7 +173,10 @@
             $('select[name=marital_status]').val(client.marital_status);
             dialogSave.dialog('open');
         }).fail(function (){
-            showNotifications('Não foi possível carregar este cliente!');
+            //PNotify.removeAll();
+            setTimeout(function(){
+                showNotifications('Não foi possível carregar este cliente');
+            },3000);
         });
     }
     function saveClient(){
@@ -263,8 +285,7 @@
         listClients();
     }
     $(document).ready( function (){
-        init();
-        
+        init();        
     })
     
 </script>
