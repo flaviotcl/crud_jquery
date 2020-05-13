@@ -63,6 +63,15 @@
 
 <?php include __DIR__ . '/../layouts/footer.php' ?>
 <script>
+
+    function showNotifications(text){
+        new PNotify({
+            title: 'titulo',
+            text: text,
+            styling: 'brighttheme',
+            type: 'error'
+        });
+    }
     function listClients(){
         let loading ='<tr><td colspan="6">Carregando ... </td></tr>';
         let empty ='<tr><td colspan="6">Nenhum registro encontrado ... </td></tr>';
@@ -126,6 +135,8 @@
                         dialogDelete.dialog('open');
                      })
        
+        }).fail(function (){
+            showNotifications('Não foi possível consultar os clientes');
         });
                
     }
@@ -142,6 +153,8 @@
             $('input[name=birthday]').val(client.birthday);
             $('select[name=marital_status]').val(client.marital_status);
             dialogSave.dialog('open');
+        }).fail(function (){
+            showNotifications('Não foi possível carregar este cliente!');
         });
     }
     function saveClient(){
@@ -168,7 +181,12 @@
             .done( function(){
                 dialogSave.dialog('close');
                 listClients();
-            });
+            }).fail(function (){
+            showNotifications(  id==""
+                                ?'Não foi possível consultar os clientes'
+                                :'Não foi possivel alterar o cliente !'
+                            );
+        });
 
     }
     function deleteClient() {
@@ -178,7 +196,9 @@
             .done(function () {
                 $('#table>tbody tr').eq(index).remove();
                 dialogDelete.dialog('close');
-            });
+            }).fail(function (){
+            showNotifications('Não foi possível excluir este cliente!');
+        });
             
     }
     let dialogSave, dialogDelete;
